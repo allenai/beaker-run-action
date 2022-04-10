@@ -19,4 +19,7 @@ runs:
   using: docker
   image: Dockerfile
   args:
-    - ${{ inputs.spec }} --token ${{ inputs.token }} --workspace ${{ inputs.workspace }} --clusters ${{ inputs.clusters }}
+    - ${{ inputs.spec }}
+    - --token=${{ inputs.token }}
+    - --workspace=${{ inputs.workspace }}
+    - --clusters=${{ inputs.clusters }}

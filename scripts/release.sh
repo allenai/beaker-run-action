@@ -2,6 +2,8 @@
 
 set -e
 
+export PYTHONPATH='./'
+
 TAG=$(python -c 'from beaker_run import VERSION; print("v" + VERSION)')
 
 read -p "Creating new release for $TAG. Do you want to continue? [Y/n] " prompt

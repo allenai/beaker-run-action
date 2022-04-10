@@ -1,0 +1,22 @@
+name: beaker-run
+description: Run an experiment on Beaker
+inputs:
+  spec:
+    description: A JSON-serialized Beaker experiment spec
+    required: true
+  token:
+    description: Your Beaker token
+    required: true
+  workspace:
+    description: The Beaker workspace to use
+    required: true
+  clusters:
+    description: |
+      A comma-separated list of clusters that can be used to override the cluster
+      in the spec for a task if any of them have enough resources avaiable.
+    default: ''
+runs:
+  using: docker
+  image: Dockerfile
+  args:
+    - ${{ inputs.spec }} --token ${{ inputs.token }} --workspace ${{ inputs.workspace }} --clusters ${{ inputs.clusters }}

@@ -1,7 +1,4 @@
-.PHONY : docs
-docs :
-	rm -rf docs/build/
-	sphinx-autobuild -b html --watch my_package/ docs/source/ docs/build/
+IMAGE_NAME=beaker-run
 
 .PHONY : run-checks
 run-checks :
@@ -9,4 +6,13 @@ run-checks :
 	black --check .
 	flake8 .
 	mypy .
-	CUDA_VISIBLE_DEVICES='' pytest -v --color=yes --doctest-modules tests/ my_package/
+
+.PHONY : docker-image
+docker-image :
+	docker build -t $(IMAGE_NAME) .
+
+.PHONY : test-run
+test-run : docker-image
+	docker run --rm $(IMAGE_NAME) '$(shell cat test_fixtures/hello_world.json)' \
+		--token $$BEAKER_TOKEN \
+		--workspace ai2/petew-testing

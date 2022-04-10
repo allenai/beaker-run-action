@@ -9,7 +9,8 @@ on:
     branches:
       - main
     paths:
-      - 'my_package/**'
+      - 'Dockerfile'
+      - '*.py'
 
 jobs:
   changelog:

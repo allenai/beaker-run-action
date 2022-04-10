@@ -1,0 +1,12 @@
+{
+    "version": "v2-alpha",
+    "description": "Hello, World!",
+    "tasks": [
+        {
+            "name": "hello",
+            "image": {"docker": "hello-world"},
+            "context": {"cluster": "ai2/petew-cpu"},
+            "result": {"path": "/unused"}
+        }
+    ]
+}

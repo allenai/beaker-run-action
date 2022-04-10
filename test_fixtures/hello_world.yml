@@ -1,0 +1,10 @@
+version: v2-alpha
+description: Hello, World!
+tasks:
+  - name: hello
+    image:
+      docker: hello-world
+    result:
+      path: /unused
+    context:
+      cluster: ai2/petew-cpu

@@ -20,6 +20,20 @@ env:
   PYTHON_PATH: ./
 
 jobs:
+  test_action:
+    name: Action
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Hello, World!
+        uses: ./
+        with:
+          spec: '{"version": "v2-alpha", "description": "Hello, World!", "tasks": [{"name": "hello", "image": {"docker": "hello-world"}, "context": {"cluster": "ai2/petew-cpu"}, "result": {"path": "/unused"}}]}'
+          token: ${{ secrets.BEAKER_TOKEN }}
+          workspace: ai2/petew-testing
+          clusters: ai2/general-cirrascale,ai2/allennlp-cirrascale
+
   checks:
     name: Python ${{ matrix.python }} - ${{ matrix.task.name }}
     runs-on: [ubuntu-latest]
@@ -27,39 +41,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: ['3.7', '3.8', '3.9', '3.10']
+        python: ['3.10']
         task:
-          - name: Test
-            run: |
-              pytest -v --color=yes tests/
+          - name: Lint
+            run: flake8 .
 
-        include:
-          - python: '3.10'
-            task:
-              name: Lint
-              run: flake8 .
+          - name: Type check
+            run: mypy .
 
-          - python: '3.10'
-            task:
-              name: Type check
-              run: mypy .
-
-          - python: '3.10'
-            task:
-              name: Build
-              run: |
-                python setup.py check
-                python setup.py bdist_wheel sdist
-
-          - python: '3.10'
-            task:
+          - task:
               name: Style
               run: black --check .
-
-          - python: '3.10'
-            task:
-              name: Docs
-              run: cd docs && make html
 
     steps:
       - uses: actions/checkout@v3
@@ -95,13 +87,7 @@ jobs:
         run: |
           test -d .venv || virtualenv -p $(which python) --copies --reset-app-data .venv
           . .venv/bin/activate
-          pip install -e .[dev]
-
-      - name: Install editable (cache hit)
-        if: steps.virtualenv-cache.outputs.cache-hit == 'true'
-        run: |
-          . .venv/bin/activate
-          pip install --no-deps -e .[dev]
+          pip install -r requirements.txt -r dev-requirements.txt
 
       - name: Show environment info
         run: |
@@ -114,19 +100,6 @@ jobs:
         run: |
           . .venv/bin/activate
           ${{ matrix.task.run }}
-
-      - name: Upload package distribution files
-        if: matrix.task.name == 'Build'
-        uses: actions/upload-artifact@v2
-        with:
-          name: package
-          path: dist
-
-      - name: Clean up
-        if: always()
-        run: |
-          . .venv/bin/activate
-          pip uninstall -y my-package
 
   release:
     name: Release
@@ -151,19 +124,9 @@ jobs:
           echo "RELEASE_VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
           echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
 
-      - name: Download package distribution files
-        uses: actions/download-artifact@v2
-        with:
-          name: package
-          path: dist
-
       - name: Generate release notes
         run: |
           python scripts/release_notes.py > ${{ github.workspace }}-RELEASE_NOTES.md
-
-      - name: Publish package to PyPI
-        run: |
-          twine upload -u ${{ secrets.PYPI_USERNAME }} -p ${{ secrets.PYPI_PASSWORD }} dist/*
 
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v1
@@ -172,5 +135,3 @@ jobs:
         with:
           body_path: ${{ github.workspace }}-RELEASE_NOTES.md
           prerelease: ${{ contains(env.TAG, 'rc') }}
-          files: |
-            dist/*

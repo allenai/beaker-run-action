@@ -1,7 +1,7 @@
 from datetime import datetime
 from pathlib import Path
 
-from my_package.version import VERSION
+from beaker_run import VERSION
 
 
 def main():

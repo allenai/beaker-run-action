@@ -49,9 +49,8 @@ jobs:
           - name: Type check
             run: mypy .
 
-          - task:
-              name: Style
-              run: black --check .
+          - name: Style
+            run: black --check .
 
     steps:
       - uses: actions/checkout@v3

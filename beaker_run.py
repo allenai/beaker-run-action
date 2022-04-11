@@ -11,7 +11,7 @@ import rich
 from beaker import Beaker, ExperimentSpec, TaskResources
 from rich import pretty, print, traceback
 
-VERSION = "1.0.2"
+VERSION = "1.0.3"
 
 
 class TermInterrupt(Exception):

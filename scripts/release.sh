@@ -15,9 +15,11 @@ if [[ $prompt == "y" || $prompt == "Y" || $prompt == "yes" || $prompt == "Yes" ]
     git add -A
     git commit -m "Bump version to $TAG for release" || true && git push
     echo "Creating new git tag $TAG"
-    git tag "$TAG" -m "$TAG"
-    git tag "$MINOR_TAG" -m "$MINOR_TAG"
-    git tag "$MAJOR_TAG" -m "$MAJOR_TAG"
+    git tag -a "$TAG" -m "$TAG"
+    git push --delete origin "$MINOR_TAG"
+    git tag -fa "$MINOR_TAG" -m "$MINOR_TAG"
+    git push --delete origin "$MAJOR_TAG"
+    git tag -fa "$MAJOR_TAG" -m "$MAJOR_TAG"
     git push --tags
 else
     echo "Cancelled"

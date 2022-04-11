@@ -1,5 +1,7 @@
 # beaker-run-action
 
+This is a GitHub Action for submitting experiments to Beaker.
+
 ## Inputs
 
 ### `spec`

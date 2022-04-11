@@ -15,6 +15,11 @@ inputs:
       A comma-separated list of clusters that can be used to override the cluster
       in the spec for a task if any of them have enough resources avaiable.
     default: ''
+  timeout:
+    description: |
+      Time to wait (in seconds) for the experiment to finish.
+      A timeout of -1 means wait indefinitely. A timeout of 0 means don't wait at all.
+    default: -1
 runs:
   using: docker
   image: Dockerfile
@@ -23,3 +28,4 @@ runs:
     - --token=${{ inputs.token }}
     - --workspace=${{ inputs.workspace }}
     - --clusters=${{ inputs.clusters }}
+    - --timeout=${{ inputs.timeout }}

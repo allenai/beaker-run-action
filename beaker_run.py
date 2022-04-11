@@ -42,6 +42,13 @@ def generate_name() -> str:
 )
 @click.option("--org", default="ai2", help="The Beaker organization")
 @click.option("-n", "--name", default=None, help="A name to assign to the experiment")
+@click.option(
+    "--timeout",
+    type=int,
+    default=-1,
+    help="""Time to wait (in seconds) for the experiment to finish.
+    A timeout of -1 means wait indefinitely. A timeout of 0 means don't wait at all.""",
+)
 def main(
     spec_json: str,
     token: str,
@@ -49,6 +56,7 @@ def main(
     clusters: str,
     org: str = "ai2",
     name: Optional[str] = None,
+    timeout: int = -1,
 ):
     beaker = Beaker.from_env(user_token=token, default_workspace=workspace)
 
@@ -79,19 +87,27 @@ def main(
         f"Experiment {experiment.id} submitted.\nSee progress at https://beaker.org/ex/{experiment.id}",
     )
 
+    if timeout == 0:
+        return
+
     try:
         print("\n- Waiting for job to finish...")
-        experiment = beaker.experiment.await_all(experiment, timeout=20 * 60)
+        experiment = beaker.experiment.await_all(
+            experiment, timeout=None if timeout < 0 else timeout
+        )
 
         print("\n- Pulling logs...")
         logs = "".join([line.decode() for line in beaker.experiment.logs(experiment)])
         rich.get_console().rule("Logs")
         rich.get_console().print(logs, highlight=False)
 
-        sys.exit(experiment.jobs[0].status.exit_code)
-    except (KeyboardInterrupt, TermInterrupt):
-        print("- Canceling job...", end="\n\n")
+        for job in experiment.jobs:
+            if job.status.exit_code is not None and job.status.exit_code > 0:
+                sys.exit(job.status.exit_code)
+    except (KeyboardInterrupt, TermInterrupt, TimeoutError):
+        print("\n- Canceling job...")
         beaker.experiment.stop(experiment)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

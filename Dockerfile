@@ -7,4 +7,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY beaker_run.py .
 
-ENTRYPOINT ["python", "beaker_run.py"]
+ENTRYPOINT ["python", "/app/beaker/beaker_run.py"]

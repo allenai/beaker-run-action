@@ -28,7 +28,7 @@ they will be used instead of the cluster specified in the experiment spec.
 ## Example
 
 ```yaml
-uses: allenai/beaker-run-action@v1
+uses: allenai/beaker-run-action@v1.0.0
 with:
   spec: |
     {

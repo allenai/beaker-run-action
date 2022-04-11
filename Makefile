@@ -15,4 +15,6 @@ docker-image :
 test-run : docker-image
 	docker run --rm $(IMAGE_NAME) '$(shell cat test_fixtures/hello_world.json)' \
 		--token $$BEAKER_TOKEN \
-		--workspace ai2/petew-testing
+		--workspace ai2/petew-testing \
+		--timeout=-1 \
+		--clusters ai2/general-cirrascale,ai2/allennlp-cirrascale

@@ -11,9 +11,17 @@ run-checks :
 docker-image :
 	docker build -t $(IMAGE_NAME) .
 
-.PHONY : test-run
-test-run : docker-image
+.PHONY : docker-test-run
+docker-test-run : docker-image
 	docker run --rm $(IMAGE_NAME) '$(shell cat test_fixtures/hello_world.json)' \
+		--token $$BEAKER_TOKEN \
+		--workspace ai2/petew-testing \
+		--timeout=-1 \
+		--clusters ai2/general-cirrascale,ai2/allennlp-cirrascale
+
+.PHONY : test-run
+test-run :
+	python beaker_run.py '$(shell cat test_fixtures/hello_world.json)' \
 		--token $$BEAKER_TOKEN \
 		--workspace ai2/petew-testing \
 		--timeout=-1 \

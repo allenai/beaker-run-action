@@ -85,20 +85,24 @@ def main(
     print("\n- Submitting experiment...")
     experiment = beaker.experiment.create(name, spec)
     print(
-        f"Experiment {experiment.id} submitted.\nSee progress at https://beaker.org/ex/{experiment.id}",
+        f"See progress at https://beaker.org/ex/{experiment.id}",
     )
 
     if timeout == 0:
         return
 
     try:
-        print("\n- Waiting for job to finish...")
+        print("\n- Waiting for job to finish...", end="")
         experiment = beaker.experiment.await_all(
-            experiment, timeout=None if timeout < 0 else timeout
+            experiment,
+            timeout=None if timeout <= 0 else timeout,
+            quiet=True,
+            poll_interval=3.0,
+            callback=lambda x: print(".", end=""),
         )
 
-        print("\n- Pulling logs...")
-        logs = "".join([line.decode() for line in beaker.experiment.logs(experiment)])
+        print("\n\n- Pulling logs...")
+        logs = "".join([line.decode() for line in beaker.experiment.logs(experiment, quiet=True)])
         rich.get_console().rule("Logs")
         rich.get_console().print(logs, highlight=False)
 

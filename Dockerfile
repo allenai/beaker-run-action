@@ -1,6 +1,4 @@
-FROM python:3.10-alpine
-
-WORKDIR /app/beaker
+FROM ghcr.io/allenai/beaker-py:v0.6.1
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt

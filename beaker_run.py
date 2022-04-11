@@ -27,6 +27,7 @@ def generate_name() -> str:
 
 
 @click.command()
+@click.version_option(VERSION)
 @click.argument("spec-json", type=str)
 @click.option(
     "--token",

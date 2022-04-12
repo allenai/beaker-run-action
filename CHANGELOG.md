@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v1.0.5](https://github.com/allenai/beaker-run-action/releases/tag/v1.0.5) - 2022-04-12
+
 ### Changed
 
 - The `spec` input can now be YAML or JSON, or a path to a YAML or JSON file.

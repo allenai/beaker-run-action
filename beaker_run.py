@@ -1,4 +1,3 @@
-import json
 import os
 import signal
 import sys
@@ -8,6 +7,7 @@ from typing import List, Optional
 import click
 import petname
 import rich
+import yaml
 from beaker import Beaker, ExperimentSpec, TaskResources
 from rich import pretty, print, traceback
 
@@ -28,7 +28,7 @@ def generate_name() -> str:
 
 @click.command()
 @click.version_option(VERSION)
-@click.argument("spec-json", type=str)
+@click.argument("spec", type=str)
 @click.option(
     "--token",
     required=True,
@@ -51,7 +51,7 @@ def generate_name() -> str:
     A timeout of -1 means wait indefinitely. A timeout of 0 means don't wait at all.""",
 )
 def main(
-    spec_json: str,
+    spec: str,
     token: str,
     workspace: str,
     clusters: str,
@@ -59,17 +59,34 @@ def main(
     name: Optional[str] = None,
     timeout: int = -1,
 ):
+    """
+    Submit and await a Beaker experiment defined by the SPEC.
+
+    SPEC can be a JSON or Yaml string or file.
+    """
     beaker = Beaker.from_env(user_token=token, default_workspace=workspace)
 
-    print(f"- Authenticated as {beaker.account.name}")
+    print(f"- Authenticated as '{beaker.account.name}'")
 
     name: str = name if name is not None else generate_name()
 
-    # Load spec and determine the cluster(s) to use.
-    spec = ExperimentSpec.from_json(json.loads(spec_json))
+    print(f"\n- Experiment name: '{name}'")
+
+    # Load experiment spec.
+    serialized_spec: str
+    if os.path.exists(spec):
+        with open(spec, "rt") as spec_file:
+            serialized_spec = spec_file.read()
+    else:
+        serialized_spec = spec
+    spec_dict = yaml.load(serialized_spec, Loader=yaml.SafeLoader)
+    exp_spec = ExperimentSpec.from_json(spec_dict)
+
+    print("\n- Experiment spec:", exp_spec.to_json())
+
     clusters: List[str] = [] if not clusters else clusters.split(",")
     if clusters:
-        for i, task in enumerate(spec.tasks):
+        for i, task in enumerate(exp_spec.tasks):
             available_clusters = beaker.cluster.filter_available(
                 task.resources or TaskResources(), *clusters
             )
@@ -80,10 +97,8 @@ def main(
                 )
                 task.context.cluster = cluster_to_use
 
-    print("\n- Experiment spec:", spec.to_json())
-
     print("\n- Submitting experiment...")
-    experiment = beaker.experiment.create(name, spec)
+    experiment = beaker.experiment.create(name, exp_spec)
     print(
         f"See progress at https://beaker.org/ex/{experiment.id}",
     )
@@ -101,7 +116,7 @@ def main(
             callback=lambda x: print(".", end=""),
         )
 
-        print("\n\n- Pulling logs...")
+        print("\n")
         logs = "".join([line.decode() for line in beaker.experiment.logs(experiment, quiet=True)])
         rich.get_console().rule("Logs")
         rich.get_console().print(logs, highlight=False)

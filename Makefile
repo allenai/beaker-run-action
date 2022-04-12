@@ -21,7 +21,7 @@ docker-test-run : docker-image
 
 .PHONY : test-run
 test-run :
-	python beaker_run.py '$(shell cat test_fixtures/hello_world.json)' \
+	python beaker_run.py test_fixtures/hello_world.json \
 		--token $$BEAKER_TOKEN \
 		--workspace ai2/petew-testing \
 		--timeout=-1 \

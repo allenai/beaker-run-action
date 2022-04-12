@@ -1,4 +1,5 @@
-beaker-py==0.6.1
+beaker-py==0.7.0
 rich
 click
 petname
+PyYAML

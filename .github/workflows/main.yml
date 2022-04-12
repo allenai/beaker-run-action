@@ -153,40 +153,17 @@ jobs:
 
       - name: Prepare environment
         run: |
-          TAG=${GITHUB_REF#refs/tags/}
           echo "RELEASE_VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
-          echo "TAG=${TAG}" >> $GITHUB_ENV
-          echo "MINOR_TAG=${TAG%.*}"
-          echo "MAJOR_TAG=${TAG%.*.*}"
+          echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
 
       - name: Generate release notes
         run: |
           python scripts/release_notes.py > ${{ github.workspace }}-RELEASE_NOTES.md
 
-      - name: Publish GitHub release (${{ env.TAG }})
+      - name: Publish GitHub release
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           body_path: ${{ github.workspace }}-RELEASE_NOTES.md
           prerelease: ${{ contains(env.TAG, 'rc') }}
-
-      - name: Publish GitHub release (${{ env.MINOR_TAG }})
-        if: "!contains(env.TAG, 'rc')"
-        uses: softprops/action-gh-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ env.MINOR_TAG }}
-          body: |
-            See [${{ env.TAG }}](${{ env.TAG }}) for full release notes.
-
-      - name: Publish GitHub release (${{ env.MAJOR_TAG }})
-        if: "!contains(env.TAG, 'rc')"
-        uses: softprops/action-gh-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ env.MAJOR_TAG }}
-          body: |
-            See [${{ env.TAG }}](${{ env.TAG }}) for full release notes.

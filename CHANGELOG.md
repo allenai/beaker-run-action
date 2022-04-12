@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Improved release process to automatically publish major and minor tags as releases.
+- Improved release process.
 
 ## [v1.0.5](https://github.com/allenai/beaker-run-action/releases/tag/v1.0.5) - 2022-04-12
 

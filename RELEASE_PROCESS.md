@@ -13,8 +13,8 @@
     This will commit the changes to the CHANGELOG and `version.py` files and then create a new tag in git
     which will trigger a workflow on GitHub Actions that handles the rest.
 
-3. Lastly, in order to publish to the Actions marketplace, find the major and minor tags creating during the
-   release (.e.g "v1" and "v1.0") and manually publish a new release from those via the GitHub dashboard:
+3. Lastly, in order to publish to the Actions marketplace, find the major, minor, and patch tags/releases creating during the
+   release (e.g. "v1", "v1.0", and "v1.0.0") and manually update/publish the release from those via the GitHub dashboard:
    https://github.com/allenai/beaker-run-action/tags
 
 ## Fixing a failed release

@@ -31,7 +31,7 @@ jobs:
           - name: JSON spec
             spec: |
               {
-                "version": "v2-alpha",
+                "version": "v2",
                 "description": "Hello, World!",
                 "tasks": [
                   {
@@ -45,7 +45,7 @@ jobs:
 
           - name: YAML spec
             spec: |
-              version: "v2-alpha"
+              version: "v2"
               description: "Hello, World!"
               tasks:
                 - name: "hello"

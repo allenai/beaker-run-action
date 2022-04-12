@@ -114,7 +114,7 @@ def main(
             quiet=True,
             poll_interval=3.0,
             callback=lambda x: print(".", end=""),
-        )
+        )[0]
 
         print("\n")
         logs = "".join([line.decode() for line in beaker.experiment.logs(experiment, quiet=True)])

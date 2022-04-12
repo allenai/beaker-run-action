@@ -46,7 +46,7 @@ and a positive timeout means the action will wait that many seconds for the expe
 uses: allenai/beaker-run-action@v1
 with:
   spec: |  # <-- !! This bar "|" is important !!
-    version: "v2-alpha"
+    version: "v2"
     description: "Hello, World!"
     tasks:
       - name: "hello"

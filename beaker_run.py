@@ -66,9 +66,11 @@ def main(
     """
     beaker = Beaker.from_env(user_token=token, default_workspace=workspace)
 
-    print(f"- Authenticated as {beaker.account.name}")
+    print(f"- Authenticated as '{beaker.account.name}'")
 
     name: str = name if name is not None else generate_name()
+
+    print(f"\n- Experiment name: '{name}'")
 
     # Load experiment spec.
     serialized_spec: str
@@ -79,6 +81,8 @@ def main(
         serialized_spec = spec
     spec_dict = yaml.load(serialized_spec, Loader=yaml.SafeLoader)
     exp_spec = ExperimentSpec.from_json(spec_dict)
+
+    print("\n- Experiment spec:", exp_spec.to_json())
 
     clusters: List[str] = [] if not clusters else clusters.split(",")
     if clusters:
@@ -92,8 +96,6 @@ def main(
                     f"\n- Found cluster with enough free resources for task {i}: '{cluster_to_use}'"
                 )
                 task.context.cluster = cluster_to_use
-
-    print("\n- Experiment spec:", exp_spec.to_json())
 
     print("\n- Submitting experiment...")
     experiment = beaker.experiment.create(name, exp_spec)
@@ -114,7 +116,7 @@ def main(
             callback=lambda x: print(".", end=""),
         )
 
-        print("\n\n- Pulling logs...")
+        print("\n")
         logs = "".join([line.decode() for line in beaker.experiment.logs(experiment, quiet=True)])
         rich.get_console().rule("Logs")
         rich.get_console().print(logs, highlight=False)

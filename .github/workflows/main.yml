@@ -43,6 +43,19 @@ jobs:
                 ]
               }
 
+          - name: YAML spec
+            spec: |
+              version: "v2-alpha"
+              description: "Hello, World!"
+              tasks:
+                - name: "hello"
+                  image:
+                    docker: "hello-world"
+                  context:
+                    cluster: "ai2/petew-cpu"
+                  result:
+                    path: "/unused"
+
     steps:
       - uses: actions/checkout@v3
 

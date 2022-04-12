@@ -11,7 +11,7 @@ This is useful when you need special hardware, such as GPUs, for a step.
 
 ### `spec` (required)
 
-A JSON-serialized experiment spec.
+A YAML or JSON experiment spec. This can also be a path to a YAML or JSON file.
 
 ### `token` (required)
 
@@ -46,18 +46,16 @@ and a positive timeout means the action will wait that many seconds for the expe
 uses: allenai/beaker-run-action@v1
 with:
   spec: |
-    {
-      "version": "v2-alpha",
-      "description": "Hello, World!",
-      "tasks": [
-        {
-          "name": "hello",
-          "image": {"docker": "hello-world"},
-          "context": {"cluster": "ai2/petew-cpu"},
-          "result": {"path": "/unused"}
-        }
-      ]
-    }
+    version: "v2-alpha"
+    description: "Hello, World!"
+    tasks:
+      - name: "hello"
+        image:
+          docker: "hello-world"
+        context:
+          cluster: "ai2/petew-cpu"
+        result:
+          path: "/unused"
   token: ${{ secrets.BEAKER_TOKEN }}
   workspace: ai2/petew-testing
   clusters: ai2/general-cirrascale,ai2/allennlp-cirrascale

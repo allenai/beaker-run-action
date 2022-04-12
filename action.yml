@@ -29,3 +29,6 @@ runs:
     - --workspace=${{ inputs.workspace }}
     - --clusters=${{ inputs.clusters }}
     - --timeout=${{ inputs.timeout }}
+branding:
+  icon: package
+  color: blue

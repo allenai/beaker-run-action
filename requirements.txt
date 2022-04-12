@@ -2,3 +2,4 @@ beaker-py==0.7.0
 rich
 click
 petname
+PyYAML

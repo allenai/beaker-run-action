@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Changed
+
+- Bumped `beaker-py` to version 0.8.2.
+
 ## [v1.0.7](https://github.com/allenai/beaker-run-action/releases/tag/v1.0.7) - 2022-04-12
 
 ### Changed

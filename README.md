@@ -1,4 +1,4 @@
-# beaker-run-action
+# beaker-run
 
 A GitHub Action for submitting experiments to Beaker.
 

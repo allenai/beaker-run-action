@@ -67,11 +67,11 @@ def main(
     """
     beaker = Beaker.from_env(user_token=token, default_workspace=workspace)
 
-    print(f"- Authenticated as '{beaker.account.name}'")
+    print(f"- Authenticated as [b]'{beaker.account.name}'[/]")
 
     name: str = name if name is not None else generate_name()
 
-    print(f"\n- Experiment name: '{name}'")
+    print(f"- Experiment name: [b]'{name}'[/]")
 
     # Load experiment spec.
     serialized_spec: str
@@ -83,7 +83,7 @@ def main(
     spec_dict = yaml.load(serialized_spec, Loader=yaml.SafeLoader)
     exp_spec = ExperimentSpec.from_json(spec_dict)
 
-    print("\n- Experiment spec:", exp_spec.to_json())
+    print("- Experiment spec:", exp_spec.to_json())
 
     cluster_to_use: Optional[str] = None
     clusters: List[str] = [] if not clusters else clusters.split(",")
@@ -99,21 +99,21 @@ def main(
                     cluster_to_use = cluster.full_name
                     task.context.cluster = cluster_to_use
                     print(
-                        f"\n- Found cluster with enough free resources for task {i}: '{cluster_to_use}'"
+                        f"- Found cluster with enough free resources for task {i}: [b]'{cluster_to_use}'[/b]"
                     )
                     break
 
-    print("\n- Submitting experiment...")
+    print("- Submitting experiment...")
     experiment = beaker.experiment.create(name, exp_spec)
     print(
-        f"See progress at {beaker.experiment.url(experiment)}",
+        f"  See progress at {beaker.experiment.url(experiment)}",
     )
 
     if timeout == 0:
         return
 
     try:
-        print("\n- Waiting for job to finish...")
+        print("- Waiting for job to finish...")
         experiment = beaker.experiment.wait_for(
             experiment,
             timeout=None if timeout <= 0 else timeout,
@@ -129,7 +129,7 @@ def main(
             if job.status.exit_code is not None and job.status.exit_code > 0:
                 sys.exit(job.status.exit_code)
     except (KeyboardInterrupt, TermInterrupt, TimeoutError):
-        print("\n- Canceling job...")
+        print("- Canceling job...")
         beaker.experiment.stop(experiment)
         sys.exit(1)
 

@@ -198,7 +198,7 @@ def main(
             if job.status.exit_code is not None and job.status.exit_code > 0:
                 exit_code = job.status.exit_code
             print()
-            rich.get_console().rule(f"Logs for task [i]'{task.display_name}'[/]")
+            rich.get_console().rule(f"Logs from task [i]'{task.display_name}'[/]")
             display_logs(beaker.job.logs(job, quiet=True))
         sys.exit(exit_code)
     except (KeyboardInterrupt, TermInterrupt, TimeoutError):

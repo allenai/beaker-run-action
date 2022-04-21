@@ -4,7 +4,7 @@ import signal
 import sys
 import time
 import uuid
-from typing import Dict, List, Optional
+from typing import Dict, Iterable, List, Optional
 
 import click
 import petname
@@ -39,6 +39,33 @@ def symbol_for_status(status: CurrentJobStatus) -> str:
         return ":stopwatch:"
     else:
         return ""
+
+
+def display_logs(logs: Iterable[bytes]):
+    console = rich.get_console()
+
+    def print_line(line: str):
+        # Remove timestamp
+        try:
+            _, line = line.split("Z ", maxsplit=1)
+        except ValueError:
+            pass
+        console.print(line, highlight=False)
+
+    line_buffer = ""
+    for bytes_chunk in logs:
+        chunk = line_buffer + bytes_chunk.decode(errors="ignore")
+        lines = chunk.split("\n")
+        if chunk.endswith("\n"):
+            line_buffer = ""
+        else:
+            # Last line line chunk is probably incomplete.
+            lines, line_buffer = lines[:-1], lines[-1]
+        for line in lines:
+            print_line(line)
+
+    if line_buffer:
+        print_line(line_buffer)
 
 
 @click.command()
@@ -103,6 +130,7 @@ def main(
     exp_spec = ExperimentSpec.from_json(spec_dict)
     print("- Experiment spec:", exp_spec.to_json())
 
+    # Find best cluster to use.
     cluster_to_use: Optional[str] = None
     clusters: List[str] = [] if not clusters else clusters.split(",")
     if clusters:
@@ -122,13 +150,16 @@ def main(
                     )
                     break
 
+    # Submit experiment.
     print("- Submitting experiment...")
     experiment = beaker.experiment.create(name, exp_spec)
     print(f"  :eyes: See progress at {beaker.experiment.url(experiment)}")
 
+    # Can return right away if timeout is 0.
     if timeout == 0:
         return
 
+    # Otherwise we wait for all tasks to complete and then display the logs.
     try:
         print("- Waiting for tasks to complete...")
         task_to_status: Dict[str, Optional[CurrentJobStatus]] = {}
@@ -166,9 +197,9 @@ def main(
             assert job is not None
             if job.status.exit_code is not None and job.status.exit_code > 0:
                 exit_code = job.status.exit_code
-            logs = "".join([line.decode() for line in beaker.job.logs(job, quiet=True)])
+            print()
             rich.get_console().rule(f"Logs for task [i]'{task.display_name}'[/]")
-            rich.get_console().print(logs, highlight=False)
+            display_logs(beaker.job.logs(job, quiet=True))
         sys.exit(exit_code)
     except (KeyboardInterrupt, TermInterrupt, TimeoutError):
         print("[yellow]Canceling jobs...[/]")

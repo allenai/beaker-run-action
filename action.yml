@@ -10,6 +10,10 @@ inputs:
   workspace:
     description: The Beaker workspace to use
     required: true
+  name:
+    description: |
+      A name to assign the experiment. If not specified, a random name will be generated.
+    default: ''
   clusters:
     description: |
       A comma-separated list of clusters that can be used to override the cluster
@@ -20,15 +24,21 @@ inputs:
       Time to wait (in seconds) for the experiment to finish.
       A timeout of -1 means wait indefinitely. A timeout of 0 means don't wait at all.
     default: -1
+  poll_interval:
+    description: |
+      Time to wait (in seconds) between polling for status changes of the experiment's jobs.
+    default: 5
 runs:
   using: docker
   image: Dockerfile
   args:
-    - ${{ inputs.spec }}
-    - --token=${{ inputs.token }}
-    - --workspace=${{ inputs.workspace }}
-    - --clusters=${{ inputs.clusters }}
-    - --timeout=${{ inputs.timeout }}
+    - "${{ inputs.spec }}"
+    - "--token='${{ inputs.token }}'"
+    - "--workspace='${{ inputs.workspace }}'"
+    - "--name='${{ inputs.name }}'"
+    - "--clusters='${{ inputs.clusters }}'"
+    - "--timeout=${{ inputs.timeout }}"
+    - "--poll-interval=${{ inputs.poll_interval }}"
 branding:
   icon: package
   color: blue

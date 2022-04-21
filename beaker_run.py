@@ -89,7 +89,7 @@ def main(
     beaker = Beaker.from_env(user_token=token, default_workspace=workspace)
     print(f"- Authenticated as [b]'{beaker.account.name}'[/]")
 
-    name: str = name if name is not None else generate_name()
+    name: str = name or generate_name()
     print(f"- Experiment name: [b]'{name}'[/]")
 
     # Load experiment spec.

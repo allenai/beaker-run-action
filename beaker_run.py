@@ -107,7 +107,7 @@ def main(
         return
 
     try:
-        print("\n- Waiting for job to finish...", end="")
+        print("\n- Waiting for job to finish...")
         experiment = beaker.experiment.wait_for(
             experiment,
             timeout=None if timeout <= 0 else timeout,

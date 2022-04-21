@@ -99,7 +99,8 @@ def main(
                     cluster_to_use = cluster.full_name
                     task_spec.context.cluster = cluster_to_use
                     print(
-                        f"- Found cluster with enough free resources for task {i}: [b]'{cluster_to_use}'[/b]"
+                        f"- Found cluster with enough free resources for task {task_spec.name or i}: "
+                        f"[b]'{cluster_to_use}'[/b]"
                     )
                     break
 
@@ -138,7 +139,9 @@ def main(
 
 
 if __name__ == "__main__":
-    rich.reconfigure(width=max(rich.get_console().width, 180), force_terminal=True)
+    rich.reconfigure(
+        width=max(rich.get_console().width, 180), force_terminal=True, force_interactive=False
+    )
     pretty.install()
     traceback.install()
     signal.signal(signal.SIGTERM, handle_sigterm)

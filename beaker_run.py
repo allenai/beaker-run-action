@@ -138,8 +138,7 @@ def main(
 
 
 if __name__ == "__main__":
-    rich.get_console().width = max(rich.get_console().width, 180)
-    rich.get_console().is_terminal = True
+    rich.reconfigure(width=max(rich.get_console().width, 180), force_terminal=True)
     pretty.install()
     traceback.install()
     signal.signal(signal.SIGTERM, handle_sigterm)

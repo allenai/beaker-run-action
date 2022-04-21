@@ -88,16 +88,16 @@ def main(
     cluster_to_use: Optional[str] = None
     clusters: List[str] = [] if not clusters else clusters.split(",")
     if clusters:
-        for i, task in enumerate(exp_spec.tasks):
+        for i, task_spec in enumerate(exp_spec.tasks):
             available_clusters = beaker.cluster.filter_available(
-                task.resources or TaskResources(), *clusters
+                task_spec.resources or TaskResources(), *clusters
             )
             random.shuffle(available_clusters)
             for cluster in available_clusters:
                 cluster_utilization = beaker.cluster.utilization(cluster)
                 if cluster_utilization.queued_jobs == 0:
                     cluster_to_use = cluster.full_name
-                    task.context.cluster = cluster_to_use
+                    task_spec.context.cluster = cluster_to_use
                     print(
                         f"- Found cluster with enough free resources for task {i}: [b]'{cluster_to_use}'[/b]"
                     )
@@ -120,10 +120,13 @@ def main(
             poll_interval=3.0,
         )[0]
 
-        print("\n")
-        logs = "".join([line.decode() for line in beaker.experiment.logs(experiment, quiet=True)])
-        rich.get_console().rule("Logs")
-        rich.get_console().print(logs, highlight=False)
+        for task in beaker.experiment.tasks(experiment):
+            logs = "".join(
+                [line.decode() for line in beaker.experiment.logs(experiment, quiet=True)]
+            )
+            print("\n")
+            rich.get_console().rule(f"Logs for task '{task.display_name}'")
+            rich.get_console().print(logs, highlight=False)
 
         for job in experiment.jobs:
             if job.status.exit_code is not None and job.status.exit_code > 0:

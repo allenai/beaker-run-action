@@ -99,8 +99,8 @@ def main(
                     cluster_to_use = cluster.full_name
                     task_spec.context.cluster = cluster_to_use
                     print(
-                        f"- Found cluster with enough free resources for task {task_spec.name or i}: "
-                        f"[b]'{cluster_to_use}'[/b]"
+                        f"- Found cluster with enough free resources for task [i]'{task_spec.name or i}'[/]: "
+                        f"[b]'{cluster_to_use}'[/]"
                     )
                     break
 
@@ -126,14 +126,14 @@ def main(
                 [line.decode() for line in beaker.experiment.logs(experiment, quiet=True)]
             )
             print("\n")
-            rich.get_console().rule(f"Logs for task '{task.display_name}'")
+            rich.get_console().rule(f"Logs for task [i]'{task.display_name}'[/]")
             rich.get_console().print(logs, highlight=False)
 
         for job in experiment.jobs:
             if job.status.exit_code is not None and job.status.exit_code > 0:
                 sys.exit(job.status.exit_code)
     except (KeyboardInterrupt, TermInterrupt, TimeoutError):
-        print("- Canceling job...")
+        print("- Canceling jobs...")
         beaker.experiment.stop(experiment)
         sys.exit(1)
 

@@ -32,13 +32,13 @@ runs:
   using: docker
   image: Dockerfile
   args:
-    - "${{ inputs.spec }}"
-    - "--token='${{ inputs.token }}'"
-    - "--workspace='${{ inputs.workspace }}'"
-    - "--name='${{ inputs.name }}'"
-    - "--clusters='${{ inputs.clusters }}'"
-    - "--timeout=${{ inputs.timeout }}"
-    - "--poll-interval=${{ inputs.poll_interval }}"
+    - ${{ inputs.spec }}
+    - --token=${{ inputs.token }}
+    - --workspace=${{ inputs.workspace }}
+    - --name=${{ inputs.name }}
+    - --clusters=${{ inputs.clusters }}
+    - --timeout=${{ inputs.timeout }}
+    - --poll-interval=${{ inputs.poll_interval }}
 branding:
   icon: package
   color: blue

@@ -1,4 +1,5 @@
 import os
+import random
 import signal
 import sys
 import uuid
@@ -91,7 +92,7 @@ def main(
                 task.resources or TaskResources(), *clusters
             )
             if available_clusters:
-                cluster_to_use = available_clusters[0].full_name
+                cluster_to_use = random.choice(available_clusters).full_name
                 print(
                     f"\n- Found cluster with enough free resources for task {i}: '{cluster_to_use}'"
                 )

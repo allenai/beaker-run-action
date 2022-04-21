@@ -1,14 +1,16 @@
 import os
+import random
 import signal
 import sys
+import time
 import uuid
-from typing import List, Optional
+from typing import Dict, Iterable, List, Optional
 
 import click
 import petname
 import rich
 import yaml
-from beaker import Beaker, ExperimentSpec, TaskResources
+from beaker import Beaker, CurrentJobStatus, ExperimentSpec, TaskResources
 from rich import pretty, print, traceback
 
 VERSION = "1.0.8"
@@ -24,6 +26,46 @@ def handle_sigterm(sig, frame):
 
 def generate_name() -> str:
     return petname.generate() + "-" + str(uuid.uuid4())[:8]
+
+
+def symbol_for_status(status: CurrentJobStatus) -> str:
+    if status == CurrentJobStatus.finalized:
+        return ":white_check_mark:"
+    elif status == CurrentJobStatus.running:
+        return ":rocket:"
+    elif status == CurrentJobStatus.created:
+        return ":thumbsup:"
+    elif status == CurrentJobStatus.scheduled:
+        return ":stopwatch:"
+    else:
+        return ""
+
+
+def display_logs(logs: Iterable[bytes]):
+    console = rich.get_console()
+
+    def print_line(line: str):
+        # Remove timestamp
+        try:
+            _, line = line.split("Z ", maxsplit=1)
+        except ValueError:
+            pass
+        console.print(line, highlight=False)
+
+    line_buffer = ""
+    for bytes_chunk in logs:
+        chunk = line_buffer + bytes_chunk.decode(errors="ignore")
+        lines = chunk.split("\n")
+        if chunk.endswith("\n"):
+            line_buffer = ""
+        else:
+            # Last line line chunk is probably incomplete.
+            lines, line_buffer = lines[:-1], lines[-1]
+        for line in lines:
+            print_line(line)
+
+    if line_buffer:
+        print_line(line_buffer)
 
 
 @click.command()
@@ -50,6 +92,12 @@ def generate_name() -> str:
     help="""Time to wait (in seconds) for the experiment to finish.
     A timeout of -1 means wait indefinitely. A timeout of 0 means don't wait at all.""",
 )
+@click.option(
+    "--poll-interval",
+    type=int,
+    default=5,
+    help="""Time to wait (in seconds) between polling for status changes of the experiment's jobs.""",
+)
 def main(
     spec: str,
     token: str,
@@ -58,6 +106,7 @@ def main(
     org: str = "ai2",
     name: Optional[str] = None,
     timeout: int = -1,
+    poll_interval: int = 5,
 ):
     """
     Submit and await a Beaker experiment defined by the SPEC.
@@ -65,12 +114,10 @@ def main(
     SPEC can be a JSON or Yaml string or file.
     """
     beaker = Beaker.from_env(user_token=token, default_workspace=workspace)
+    print(f"- Authenticated as [b]'{beaker.account.name}'[/]")
 
-    print(f"- Authenticated as '{beaker.account.name}'")
-
-    name: str = name if name is not None else generate_name()
-
-    print(f"\n- Experiment name: '{name}'")
+    name: str = name or generate_name()
+    print(f"- Experiment name: [b]'{name}'[/]")
 
     # Load experiment spec.
     serialized_spec: str
@@ -81,57 +128,89 @@ def main(
         serialized_spec = spec
     spec_dict = yaml.load(serialized_spec, Loader=yaml.SafeLoader)
     exp_spec = ExperimentSpec.from_json(spec_dict)
+    print("- Experiment spec:", exp_spec.to_json())
 
-    print("\n- Experiment spec:", exp_spec.to_json())
-
+    # Find best cluster to use.
+    cluster_to_use: Optional[str] = None
     clusters: List[str] = [] if not clusters else clusters.split(",")
     if clusters:
-        for i, task in enumerate(exp_spec.tasks):
+        for i, task_spec in enumerate(exp_spec.tasks):
             available_clusters = beaker.cluster.filter_available(
-                task.resources or TaskResources(), *clusters
+                task_spec.resources or TaskResources(), *clusters
             )
-            if available_clusters:
-                cluster_to_use = available_clusters[0].full_name
-                print(
-                    f"\n- Found cluster with enough free resources for task {i}: '{cluster_to_use}'"
-                )
-                task.context.cluster = cluster_to_use
+            random.shuffle(available_clusters)
+            for cluster in available_clusters:
+                cluster_utilization = beaker.cluster.utilization(cluster)
+                if cluster_utilization.queued_jobs == 0:
+                    cluster_to_use = cluster.full_name
+                    task_spec.context.cluster = cluster_to_use
+                    print(
+                        f"- Found cluster with enough free resources for task [i]'{task_spec.name or i}'[/]: "
+                        f"[b]'{cluster_to_use}'[/]"
+                    )
+                    break
 
-    print("\n- Submitting experiment...")
+    # Submit experiment.
+    print("- Submitting experiment...")
     experiment = beaker.experiment.create(name, exp_spec)
-    print(
-        f"See progress at https://beaker.org/ex/{experiment.id}",
-    )
+    print(f"  :eyes: See progress at {beaker.experiment.url(experiment)}")
 
+    # Can return right away if timeout is 0.
     if timeout == 0:
         return
 
+    # Otherwise we wait for all tasks to complete and then display the logs.
     try:
-        print("\n- Waiting for job to finish...", end="")
-        experiment = beaker.experiment.await_all(
-            experiment,
-            timeout=None if timeout <= 0 else timeout,
-            quiet=True,
-            poll_interval=3.0,
-            callback=lambda x: print(".", end=""),
-        )[0]
+        print("- Waiting for tasks to complete...")
+        task_to_status: Dict[str, Optional[CurrentJobStatus]] = {}
+        start_time = time.time()
+        time.sleep(poll_interval)
+        while timeout < 0 or time.time() - start_time <= timeout:
+            # Get tasks and check for status changes.
+            tasks = beaker.experiment.tasks(experiment)
+            for task in tasks:
+                job = task.latest_job
+                status = None if job is None else job.status.current
+                if task.id not in task_to_status or status != task_to_status[task.id]:
+                    print(
+                        f"  Task [i]'{task.display_name}'[/]",
+                        "submitted..." if status is None else status,
+                        "" if status is None else symbol_for_status(status),
+                    )
+                    task_to_status[task.id] = status
 
-        print("\n")
-        logs = "".join([line.decode() for line in beaker.experiment.logs(experiment, quiet=True)])
-        rich.get_console().rule("Logs")
-        rich.get_console().print(logs, highlight=False)
+            # Check if all tasks have been completed.
+            if task_to_status and all(
+                [status == CurrentJobStatus.finalized for status in task_to_status.values()]
+            ):
+                break
+            else:
+                time.sleep(poll_interval)
+        else:
+            print("[red]Timeout exceeded![/]")
+            raise TimeoutError
 
-        for job in experiment.jobs:
+        # Get logs and exit codes.
+        exit_code = 0
+        for task in beaker.experiment.tasks(experiment):
+            job = task.latest_job
+            assert job is not None
             if job.status.exit_code is not None and job.status.exit_code > 0:
-                sys.exit(job.status.exit_code)
+                exit_code = job.status.exit_code
+            print()
+            rich.get_console().rule(f"Logs from task [i]'{task.display_name}'[/]")
+            display_logs(beaker.job.logs(job, quiet=True))
+        sys.exit(exit_code)
     except (KeyboardInterrupt, TermInterrupt, TimeoutError):
-        print("\n- Canceling job...")
+        print("[yellow]Canceling jobs...[/]")
         beaker.experiment.stop(experiment)
         sys.exit(1)
 
 
 if __name__ == "__main__":
-    rich.get_console().width = max(rich.get_console().width, 180)
+    rich.reconfigure(
+        width=max(rich.get_console().width, 180), force_terminal=True, force_interactive=False
+    )
     pretty.install()
     traceback.install()
     signal.signal(signal.SIGTERM, handle_sigterm)

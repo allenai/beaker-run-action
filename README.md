@@ -21,6 +21,10 @@ Your Beaker [token](https://beaker.org/user).
 
 The Beaker workspace to use.
 
+### `name` (optional)
+
+A name to assign the experiment. If not specified, a random name will be generated.
+
 ### `clusters` (optional)
 
 A comma-separated list of clusters that can be used to override the cluster
@@ -39,6 +43,10 @@ A timeout of -1 (the default) means wait indefinitely, a timeout of 0 means don'
 and a positive timeout means the action will wait that many seconds for the experiment to complete. If the experiment doesn't complete within `timeout` seconds, it will be stopped and the action will exit as a failure.
 
 *NOTE: When `timeout` is 0, the action will always succeed even if the Beaker experiment doesn't succeed.*
+
+### `poll_interval` (optional)
+
+Time to wait (in seconds) between polling for status changes of the experiment's jobs.
 
 ## Example
 

@@ -85,18 +85,23 @@ def main(
 
     print("\n- Experiment spec:", exp_spec.to_json())
 
+    cluster_to_use: Optional[str] = None
     clusters: List[str] = [] if not clusters else clusters.split(",")
     if clusters:
         for i, task in enumerate(exp_spec.tasks):
             available_clusters = beaker.cluster.filter_available(
                 task.resources or TaskResources(), *clusters
             )
-            if available_clusters:
-                cluster_to_use = random.choice(available_clusters).full_name
-                print(
-                    f"\n- Found cluster with enough free resources for task {i}: '{cluster_to_use}'"
-                )
-                task.context.cluster = cluster_to_use
+            random.shuffle(available_clusters)
+            for cluster in available_clusters:
+                cluster_utilization = beaker.cluster.utilization(cluster)
+                if cluster_utilization.queued_jobs == 0:
+                    cluster_to_use = cluster.full_name
+                    task.context.cluster = cluster_to_use
+                    print(
+                        f"\n- Found cluster with enough free resources for task {i}: '{cluster_to_use}'"
+                    )
+                    break
 
     print("\n- Submitting experiment...")
     experiment = beaker.experiment.create(name, exp_spec)

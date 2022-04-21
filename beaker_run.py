@@ -35,6 +35,8 @@ def symbol_for_status(status: CurrentJobStatus) -> str:
         return ":rocket:"
     elif status == CurrentJobStatus.created:
         return ":thumbsup:"
+    elif status == CurrentJobStatus.scheduled:
+        return ":stopwatch:"
     else:
         return ""
 

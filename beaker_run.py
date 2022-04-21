@@ -100,7 +100,7 @@ def main(
     print("\n- Submitting experiment...")
     experiment = beaker.experiment.create(name, exp_spec)
     print(
-        f"See progress at https://beaker.org/ex/{experiment.id}",
+        f"See progress at {beaker.experiment.url(experiment)}",
     )
 
     if timeout == 0:
@@ -108,12 +108,10 @@ def main(
 
     try:
         print("\n- Waiting for job to finish...", end="")
-        experiment = beaker.experiment.await_all(
+        experiment = beaker.experiment.wait_for(
             experiment,
             timeout=None if timeout <= 0 else timeout,
-            quiet=True,
             poll_interval=3.0,
-            callback=lambda x: print(".", end=""),
         )[0]
 
         print("\n")

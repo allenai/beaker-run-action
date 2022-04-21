@@ -7,12 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- Added support for multi-task experiments.
+
 ### Changed
 
-- Bumped `beaker-py` to version 0.10.0.
+- Bumped `beaker-py` to version 0.11.0.
 - Only clusters from the corresponding input variable that don't have any queued jobs
   will be considered, and out of those, one will be picked randomly.
-- Logs for all tasks will now be printed seperately.
 
 ## [v1.0.8](https://github.com/allenai/beaker-run-action/releases/tag/v1.0.8) - 2022-04-13
 

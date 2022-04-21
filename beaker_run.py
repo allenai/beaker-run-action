@@ -2,14 +2,15 @@ import os
 import random
 import signal
 import sys
+import time
 import uuid
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 import click
 import petname
 import rich
 import yaml
-from beaker import Beaker, ExperimentSpec, TaskResources
+from beaker import Beaker, CurrentJobStatus, ExperimentSpec, TaskResources
 from rich import pretty, print, traceback
 
 VERSION = "1.0.8"
@@ -25,6 +26,17 @@ def handle_sigterm(sig, frame):
 
 def generate_name() -> str:
     return petname.generate() + "-" + str(uuid.uuid4())[:8]
+
+
+def symbol_for_status(status: CurrentJobStatus) -> str:
+    if status == CurrentJobStatus.finalized:
+        return ":white_check_mark:"
+    elif status == CurrentJobStatus.running:
+        return ":rocket:"
+    elif status == CurrentJobStatus.created:
+        return ":thumbsup:"
+    else:
+        return ""
 
 
 @click.command()
@@ -51,6 +63,12 @@ def generate_name() -> str:
     help="""Time to wait (in seconds) for the experiment to finish.
     A timeout of -1 means wait indefinitely. A timeout of 0 means don't wait at all.""",
 )
+@click.option(
+    "--poll-interval",
+    type=int,
+    default=5,
+    help="""Time to wait (in seconds) between polling for status changes of the experiment's jobs.""",
+)
 def main(
     spec: str,
     token: str,
@@ -59,6 +77,7 @@ def main(
     org: str = "ai2",
     name: Optional[str] = None,
     timeout: int = -1,
+    poll_interval: int = 5,
 ):
     """
     Submit and await a Beaker experiment defined by the SPEC.
@@ -66,11 +85,9 @@ def main(
     SPEC can be a JSON or Yaml string or file.
     """
     beaker = Beaker.from_env(user_token=token, default_workspace=workspace)
-
     print(f"- Authenticated as [b]'{beaker.account.name}'[/]")
 
     name: str = name if name is not None else generate_name()
-
     print(f"- Experiment name: [b]'{name}'[/]")
 
     # Load experiment spec.
@@ -82,7 +99,6 @@ def main(
         serialized_spec = spec
     spec_dict = yaml.load(serialized_spec, Loader=yaml.SafeLoader)
     exp_spec = ExperimentSpec.from_json(spec_dict)
-
     print("- Experiment spec:", exp_spec.to_json())
 
     cluster_to_use: Optional[str] = None
@@ -106,34 +122,54 @@ def main(
 
     print("- Submitting experiment...")
     experiment = beaker.experiment.create(name, exp_spec)
-    print(
-        f"  See progress at {beaker.experiment.url(experiment)}",
-    )
+    print(f"  :eyes: See progress at {beaker.experiment.url(experiment)}")
 
     if timeout == 0:
         return
 
     try:
-        print("- Waiting for job to finish...")
-        experiment = beaker.experiment.wait_for(
-            experiment,
-            timeout=None if timeout <= 0 else timeout,
-            poll_interval=3.0,
-        )[0]
+        print("- Waiting for tasks to complete...")
+        task_to_status: Dict[str, Optional[CurrentJobStatus]] = {}
+        start_time = time.time()
+        time.sleep(poll_interval)
+        while timeout < 0 or time.time() - start_time <= timeout:
+            # Get tasks and check for status changes.
+            tasks = beaker.experiment.tasks(experiment)
+            for task in tasks:
+                job = task.latest_job
+                status = None if job is None else job.status.current
+                if task.id not in task_to_status or status != task_to_status[task.id]:
+                    print(
+                        f"  Task [i]'{task.display_name}'[/]",
+                        "submitted..." if status is None else status,
+                        "" if status is None else symbol_for_status(status),
+                    )
+                    task_to_status[task.id] = status
 
+            # Check if all tasks have been completed.
+            if task_to_status and all(
+                [status == CurrentJobStatus.finalized for status in task_to_status.values()]
+            ):
+                break
+            else:
+                time.sleep(poll_interval)
+        else:
+            print("[red]Timeout exceeded![/]")
+            raise TimeoutError
+
+        # Get logs and exit codes.
+        exit_code = 0
         for task in beaker.experiment.tasks(experiment):
-            logs = "".join(
-                [line.decode() for line in beaker.experiment.logs(experiment, quiet=True)]
-            )
-            print("\n")
+            job = task.latest_job
+            assert job is not None
+            if job.status.exit_code is not None and job.status.exit_code > 0:
+                exit_code = job.status.exit_code
+            logs = "".join([line.decode() for line in beaker.job.logs(job, quiet=True)])
             rich.get_console().rule(f"Logs for task [i]'{task.display_name}'[/]")
             rich.get_console().print(logs, highlight=False)
-
-        for job in experiment.jobs:
-            if job.status.exit_code is not None and job.status.exit_code > 0:
-                sys.exit(job.status.exit_code)
+        sys.exit(exit_code)
     except (KeyboardInterrupt, TermInterrupt, TimeoutError):
-        print("- Canceling jobs...")
+        print("[yellow]Canceling jobs...[/]")
         beaker.experiment.stop(experiment)
         sys.exit(1)
 

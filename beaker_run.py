@@ -211,7 +211,7 @@ if __name__ == "__main__":
         width=max(rich.get_console().width, 180), force_terminal=True, force_interactive=False
     )
     pretty.install()
-    traceback.install()
+    traceback.install(width=180, show_locals=True, suppress=[click])
     signal.signal(signal.SIGTERM, handle_sigterm)
 
     main()

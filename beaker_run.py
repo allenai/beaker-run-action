@@ -139,10 +139,9 @@ def main(
                 task_spec.resources or TaskResources(), *clusters
             )
             random.shuffle(available_clusters)
-            for cluster in available_clusters:
-                cluster_utilization = beaker.cluster.utilization(cluster)
+            for cluster_utilization in available_clusters:
                 if cluster_utilization.queued_jobs == 0:
-                    cluster_to_use = cluster.full_name
+                    cluster_to_use = beaker.cluster.get(cluster_utilization.id).full_name
                     task_spec.context.cluster = cluster_to_use
                     print(
                         f"- Found cluster with enough free resources for task [i]'{task_spec.name or i}'[/]: "
@@ -212,7 +211,7 @@ if __name__ == "__main__":
         width=max(rich.get_console().width, 180), force_terminal=True, force_interactive=False
     )
     pretty.install()
-    traceback.install()
+    traceback.install(width=180, show_locals=True, suppress=[click])
     signal.signal(signal.SIGTERM, handle_sigterm)
 
     main()

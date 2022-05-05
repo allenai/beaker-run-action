@@ -141,7 +141,7 @@ def main(
             random.shuffle(available_clusters)
             for cluster_utilization in available_clusters:
                 if cluster_utilization.queued_jobs == 0:
-                    cluster_to_use = beaker.cluster.get(cluster_utilization.id).full_name
+                    cluster_to_use = cluster_utilization.cluster.full_name
                     task_spec.context.cluster = cluster_to_use
                     print(
                         f"- Found cluster with enough free resources for task [i]'{task_spec.name or i}'[/]: "

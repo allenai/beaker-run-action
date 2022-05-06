@@ -13,7 +13,7 @@ import yaml
 from beaker import Beaker, CurrentJobStatus, ExperimentSpec, TaskResources
 from rich import pretty, print, traceback
 
-VERSION = "1.1.2"
+VERSION = "1.1.3"
 
 
 class TermInterrupt(Exception):

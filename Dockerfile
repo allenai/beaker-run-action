@@ -1,4 +1,4 @@
-FROM ghcr.io/allenai/beaker-py:v0.14.1
+FROM ghcr.io/allenai/beaker-py:v0.15
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt

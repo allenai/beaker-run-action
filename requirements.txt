@@ -1,4 +1,4 @@
-beaker-py==0.15
+beaker-py==0.15.1
 rich
 click
 petname

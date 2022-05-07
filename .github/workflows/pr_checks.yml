@@ -39,7 +39,7 @@ jobs:
         # If this step fails, this means beaker-py version in the Dockerfile base image doesn't
         # the beaker-py version in requirements.txt
         beaker_py_base_image_version=$(grep 'FROM' Dockerfile | head -n 1 | sed 's/FROM.*:v//')
-        beaker_py_requirements_version=$(grep 'beaker-py' requirements.txt | head -n 1 | sed 's/beaker-py==//')
+        beaker_py_requirements_version=$(grep 'beaker-py' requirements.txt | head -n 1 | 's/beaker-py>=\([^,]\{1,\}\),.*/\1/')
         if [ "$beaker_py_base_image_version" != "$beaker_py_requirements_version" ]; then
             echo "Docker base image version (v${beaker_py_base_image_version}) does not match beaker-py version in requirements.txt (v${beaker_py_requirements_version})"
             exit 1

@@ -1,4 +1,4 @@
-beaker-py>=0.15,<0.16
+beaker-py>=0.15,<1.2
 rich
 click
 petname

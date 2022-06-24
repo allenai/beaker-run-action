@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- Summary of task exit codes now printed at the end.
+
 ## [v1.1.5](https://github.com/allenai/beaker-run-action/releases/tag/v1.1.5) - 2022-05-31
 
 ### Changed

@@ -195,17 +195,20 @@ def main(
             job = task.latest_job
             assert job is not None
             print()
-            rich.get_console().rule(f"Logs from task [i]'{task.display_name}'[/]")
+            rich.get_console().rule(f"Logs from task [i]'{task.display_name}'[/] :point_down:")
             display_logs(beaker.job.logs(job, quiet=True))
             rich.get_console().rule(f"End of logs from task [i]'{task.display_name}'[/]")
 
+        print("- Summary:")
         exit_code = 0
         for task in beaker.experiment.tasks(experiment):
             job = task.latest_job
             assert job is not None
             if job.status.exit_code is not None and job.status.exit_code > 0:
                 exit_code = job.status.exit_code
-                print(f":x: Task '{task.display_name}' failed with exit code {exit_code}")
+                print(f"  :x: Task '{task.display_name}' failed with exit code {exit_code}")
+            else:
+                print(f"  :white_check_mark: Task '{task.display_name}' succeeded")
 
         sys.exit(exit_code)
     except (KeyboardInterrupt, TermInterrupt, TimeoutError):

@@ -10,7 +10,7 @@ import click
 import petname
 import rich
 import yaml
-from beaker import Beaker, CurrentJobStatus, ExperimentSpec, TaskResources
+from beaker import Beaker, CanceledCode, CurrentJobStatus, ExperimentSpec, TaskResources
 from rich import pretty, print, traceback
 
 VERSION = "1.1.6"
@@ -37,6 +37,10 @@ def symbol_for_status(status: CurrentJobStatus) -> str:
         return ":thumbsup:"
     elif status == CurrentJobStatus.scheduled:
         return ":stopwatch:"
+    elif status == CurrentJobStatus.canceled:
+        return ":no_entry_sign:"
+    elif status == CurrentJobStatus.preempted:
+        return ":warning:"
     else:
         return ""
 
@@ -170,6 +174,15 @@ def main(
             tasks = beaker.experiment.tasks(experiment)
             for task in tasks:
                 job = task.latest_job
+                status: Optional[CurrentJobStatus] = None
+                if job is not None:
+                    if job.status.canceled_code in {
+                        CanceledCode.system_preemption,
+                        CanceledCode.user_preemption,
+                    }:
+                        status = CurrentJobStatus.preempted
+                    else:
+                        status = job.status.current
                 status = None if job is None else job.status.current
                 if task.id not in task_to_status or status != task_to_status[task.id]:
                     print(
@@ -188,7 +201,7 @@ def main(
                 time.sleep(poll_interval)
         else:
             print("[red]Timeout exceeded![/]")
-            raise TimeoutError
+            raise TimeoutError()
 
         # Get logs and exit codes.
         for task in beaker.experiment.tasks(experiment):

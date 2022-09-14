@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v1.1.7](https://github.com/allenai/beaker-run-action/releases/tag/v1.1.7) - 2022-09-14
+
 ### Fixed
 
 - Preempted jobs are handled gracefully now so the task won't be treated as a failure when its latest job is preempted.

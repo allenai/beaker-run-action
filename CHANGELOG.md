@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v1.1.8](https://github.com/allenai/beaker-run-action/releases/tag/v1.1.8) - 2022-09-23
+
+### Fixed
+
+- Upgraded `beaker-py` to fix a bug with `Node` data model.
+
 ## [v1.1.7](https://github.com/allenai/beaker-run-action/releases/tag/v1.1.7) - 2022-09-14
 
 ### Fixed

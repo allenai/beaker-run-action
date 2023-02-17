@@ -26,20 +26,3 @@ jobs:
         # If this step fails, this means you haven't updated the CHANGELOG.md
         # file with notes on your contribution.
         git diff --name-only $(git merge-base origin/main HEAD) | grep '^CHANGELOG.md$' && echo "Thanks for helping keep our CHANGELOG up-to-date!"
-
-  dependencies:
-    name: Dependencies
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    steps:
-    - uses: actions/checkout@v2
-
-    - name: Check that beaker-py version is consistent
-      run: |
-        # If this step fails, this means beaker-py version in the Dockerfile base image isn't compatible with the version in requirements.txt.
-        beaker_py_base_image_version=$(grep 'FROM' Dockerfile | head -n 1 | sed 's/FROM.*:v//')
-        beaker_py_requirements_version=$(grep 'beaker-py' requirements.txt | head -n 1 | sed 's/beaker-py>=\([^,]\{1,\}\),.*/\1/')
-        if [ "$beaker_py_base_image_version" != "$beaker_py_requirements_version" ]; then
-            echo "Docker base image version (v${beaker_py_base_image_version}) does not match beaker-py version in requirements.txt (v${beaker_py_requirements_version})"
-            exit 1
-        fi

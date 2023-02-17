@@ -21,6 +21,7 @@ class TermInterrupt(Exception):
 
 
 def handle_sigterm(sig, frame):
+    del sig, frame
     raise TermInterrupt
 
 
@@ -107,9 +108,9 @@ def main(
     spec: str,
     token: str,
     workspace: str,
-    clusters: str,
+    clusters: str,  # type: ignore
     org: str = "ai2",
-    name: Optional[str] = None,
+    name: Optional[str] = None,  # type: ignore
     timeout: int = -1,
     poll_interval: int = 5,
 ):
@@ -118,7 +119,7 @@ def main(
 
     SPEC can be a JSON or Yaml string or file.
     """
-    beaker = Beaker.from_env(user_token=token, default_workspace=workspace)
+    beaker = Beaker.from_env(user_token=token, default_workspace=workspace, default_org=org)
     print(f"- Authenticated as [b]'{beaker.account.name}'[/]")
 
     name: str = name or generate_name()

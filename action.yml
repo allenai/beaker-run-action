@@ -2,7 +2,9 @@ name: beaker-run
 description: Run an experiment on Beaker
 inputs:
   spec:
-    description: A JSON-serialized Beaker experiment spec
+    description: |
+      A YAML or JSON Beaker experiment spec. This could be the YAML/JSON string itself or a path
+      to a YAML/JSON file.
     required: true
   token:
     description: Your Beaker token

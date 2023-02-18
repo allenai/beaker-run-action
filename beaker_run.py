@@ -55,7 +55,7 @@ def display_logs(logs: Iterable[bytes]):
             _, line = line.split("Z ", maxsplit=1)
         except ValueError:
             pass
-        console.print(line, highlight=False)
+        console.print(line, highlight=False, markup=False)
 
     line_buffer = ""
     for bytes_chunk in logs:

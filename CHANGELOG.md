@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Fixed
+
+- Don't print markup
+
 ## [v1.1.9](https://github.com/allenai/beaker-run-action/releases/tag/v1.1.9) - 2023-02-17
 
 ### Fixed

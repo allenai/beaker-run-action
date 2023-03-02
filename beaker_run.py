@@ -134,6 +134,10 @@ def main(
         serialized_spec = spec
     spec_dict = yaml.load(serialized_spec, Loader=yaml.SafeLoader)
     exp_spec = ExperimentSpec.from_json(spec_dict)
+    if exp_spec.tasks[0].image.beaker is not None:
+        # Validate Beaker image.
+        image_full_name = beaker.image.get(exp_spec.tasks[0].image.beaker).full_name
+        exp_spec.tasks[0].image.beaker = image_full_name
     print("- Experiment spec:", exp_spec.to_json())
 
     # Find best cluster to use.

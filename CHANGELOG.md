@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Fixed
+
+- Improved resolution of Beaker images when given only the partial name.
+
 ## [v1.1.10](https://github.com/allenai/beaker-run-action/releases/tag/v1.1.10) - 2023-02-17
 
 ### Fixed

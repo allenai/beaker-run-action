@@ -13,7 +13,7 @@ import yaml
 from beaker import Beaker, CanceledCode, CurrentJobStatus, ExperimentSpec, TaskResources
 from rich import pretty, print, traceback
 
-VERSION = "1.2.0"
+VERSION = "1.2.1"
 
 
 class TermInterrupt(Exception):
@@ -225,6 +225,11 @@ def main(
             if job.status.exit_code is not None and job.status.exit_code > 0:
                 exit_code = job.status.exit_code
                 print(f"  :x: Task '{task.display_name}' failed with exit code {exit_code}")
+            elif job.status.failed is not None:
+                exit_code = 1
+                print(f"  :x: Task '{task.display_name}' failed")
+                if job.status.message is not None:
+                    print(job.status.message)
             else:
                 print(f"  :white_check_mark: Task '{task.display_name}' succeeded")
 

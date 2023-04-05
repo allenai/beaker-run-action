@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Fixed
+
+- Fixed a bug where jobs that failed with no exit code were marked as a success.
+
 ## [v1.2.0](https://github.com/allenai/beaker-run-action/releases/tag/v1.2.0) - 2023-03-02
 
 ### Fixed

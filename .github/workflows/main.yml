@@ -38,7 +38,7 @@ jobs:
                   {
                     "name": "hello",
                     "image": {"docker": "hello-world"},
-                    "context": {"priority": "normal"},
+                    "context": {"priority": "low"},
                     "result": {"path": "/unused"}
                   }
                 ]
@@ -54,7 +54,7 @@ jobs:
                   image:
                     docker: "hello-world"
                   context:
-                    priority: "normal"
+                    priority: "low"
                   result:
                     path: "/unused"
 

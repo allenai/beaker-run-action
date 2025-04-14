@@ -38,7 +38,6 @@ jobs:
                   {
                     "name": "hello",
                     "image": {"docker": "hello-world"},
-                    "context": {"cluster": "ai2/petew-cpu"},
                     "result": {"path": "/unused"}
                   }
                 ]
@@ -53,8 +52,6 @@ jobs:
                 - name: "hello"
                   image:
                     docker: "hello-world"
-                  context:
-                    cluster: "ai2/petew-cpu"
                   result:
                     path: "/unused"
 
@@ -67,7 +64,6 @@ jobs:
           spec: ${{ matrix.task.spec }}
           token: ${{ secrets.BEAKER_TOKEN }}
           workspace: ai2/petew-testing
-          clusters: ai2/general-cirrascale,ai2/allennlp-cirrascale
 
   checks:
     name: Python ${{ matrix.python }} - ${{ matrix.task.name }}

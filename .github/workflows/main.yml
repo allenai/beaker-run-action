@@ -33,6 +33,7 @@ jobs:
               {
                 "version": "v2",
                 "description": "Hello, World!",
+                "budget": "ai2/oe-training",
                 "tasks": [
                   {
                     "name": "hello",
@@ -47,6 +48,7 @@ jobs:
             spec: |
               version: "v2"
               description: "Hello, World!"
+              budget: "ai2/oe-training"
               tasks:
                 - name: "hello"
                   image:

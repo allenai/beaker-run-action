@@ -16,13 +16,11 @@ docker-test-run : docker-image
 	docker run --rm $(IMAGE_NAME) '$(shell cat test_fixtures/hello_world.json)' \
 		--token $$BEAKER_TOKEN \
 		--workspace ai2/petew-testing \
-		--timeout=-1 \
-		--clusters ai2/general-cirrascale,ai2/allennlp-cirrascale
+		--timeout=-1
 
 .PHONY : test-run
 test-run :
 	python beaker_run.py test_fixtures/hello_world.json \
 		--token $$BEAKER_TOKEN \
 		--workspace ai2/petew-testing \
-		--timeout=-1 \
-		--clusters ai2/general-cirrascale,ai2/allennlp-cirrascale
+		--timeout=-1

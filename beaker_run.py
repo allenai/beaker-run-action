@@ -113,100 +113,96 @@ def main(
     """
     console = rich.get_console()
 
-    beaker = Beaker.from_env(user_token=token, default_workspace=workspace, default_org=org)
-    print(f"- Authenticated as [b]'{beaker.user_name}'[/]")
+    with Beaker.from_env(user_token=token, default_workspace=workspace, default_org=org) as beaker:
+        print(f"❯ Authenticated as [b]'{beaker.user_name}'[/]")
 
-    name: str = name or generate_name()
-    print(f"- Experiment name: [b]'{name}'[/]")
+        name: str = name or generate_name()
+        print(f"❯ Experiment name: [b]'{name}'[/]")
 
-    # Load experiment spec.
-    serialized_spec: str
-    if os.path.exists(spec):
-        with open(spec, "rt") as spec_file:
-            serialized_spec = spec_file.read()
-    else:
-        serialized_spec = spec
+        # Load experiment spec.
+        serialized_spec: str
+        if os.path.exists(spec):
+            with open(spec, "rt") as spec_file:
+                serialized_spec = spec_file.read()
+        else:
+            serialized_spec = spec
 
-    spec_dict = yaml.load(serialized_spec, Loader=yaml.SafeLoader)
-    exp_spec = BeakerExperimentSpec.from_json(spec_dict)
-    if exp_spec.tasks[0].image.beaker is not None:
-        # Validate Beaker image.
-        image_full_name = beaker.image.get(exp_spec.tasks[0].image.beaker).full_name
-        exp_spec.tasks[0].image.beaker = image_full_name
-    print("- Experiment spec:", exp_spec.to_json())
+        spec_dict = yaml.load(serialized_spec, Loader=yaml.SafeLoader)
+        exp_spec = BeakerExperimentSpec.from_json(spec_dict)
 
-    # Submit experiment.
-    print("- Submitting experiment...")
-    workload = beaker.experiment.create(name=name, spec=exp_spec)
-    tasks = list(workload.experiment.tasks)
-    print(f"  :eyes: See progress at {beaker.workload.url(workload)}")
+        # Submit experiment.
+        print("❯ Submitting experiment...")
+        workload = beaker.experiment.create(name=name, spec=exp_spec)
+        tasks = list(workload.experiment.tasks)
+        print(f"  :eyes: See progress at {beaker.workload.url(workload)}")
 
-    # Can return right away if timeout is 0.
-    if timeout == 0:
-        return 0
+        # Can return right away if timeout is 0.
+        if timeout == 0:
+            return 0
 
-    # Otherwise we wait for all tasks to complete and then display the logs.
-    try:
-        print("- Waiting for tasks to complete...")
-        task_to_status: dict[str, str] = {task.id: "pending..." for task in tasks}
-        task_finalized: dict[str, bool] = {task.id: False for task in tasks}
-        start_time = time.time()
-        time.sleep(poll_interval)
-        while timeout < 0 or time.time() - start_time <= timeout:
-            # Check for status changes.
+        # Otherwise we wait for all tasks to complete and then display the logs.
+        try:
+            print("❯ Waiting for tasks to complete...")
+            task_to_status: dict[str, str] = {task.id: "pending..." for task in tasks}
+            task_finalized: dict[str, bool] = {task.id: False for task in tasks}
+            start_time = time.time()
+            time.sleep(poll_interval)
+            while timeout < 0 or time.time() - start_time <= timeout:
+                # Check for status changes.
+                for task in tasks:
+                    job = beaker.workload.get_latest_job(workload, task=task)
+                    if job is not None:
+                        status = format_job_status(job)
+                        if status != task_to_status[task.id]:
+                            print(f"  Task [i]'{task.name}'[/] ❯ {status}")
+                            task_to_status[task.id] = status
+
+                        if job.status.HasField("finalized"):
+                            task_finalized[task.id] = True
+
+                # Check if all tasks have been completed.
+                if all(task_finalized.values()):
+                    break
+                else:
+                    time.sleep(poll_interval)
+            else:
+                print("[red]Timeout exceeded![/]")
+                raise TimeoutError()
+
+            # Get logs and exit codes.
             for task in tasks:
                 job = beaker.workload.get_latest_job(workload, task=task)
-                if job is not None:
-                    status = format_job_status(job)
-                    if status != task_to_status[task.id]:
-                        print(f"  Task [i]'{task.name}'[/] ❯ {status}")
-                        task_to_status[task.id] = status
+                assert job is not None
+                print()
+                console.rule(f"Logs from task [i]'{task.name}'[/] :point_down:")
+                for job_log in beaker.job.logs(job, follow=True):
+                    console.print(job_log.message.decode(), highlight=False, markup=False)
+                print()
+                console.rule(f"End of logs from task [i]'{task.name}'[/]")
 
-                    if job.status.HasField("finalized"):
-                        task_finalized[task.id] = True
+            print("❯ Summary:")
+            exit_code = 0
+            for task in tasks:
+                job = beaker.workload.get_latest_job(workload, task=task)
+                assert job is not None
+                if job.status.HasField("exit_code") and job.status.exit_code > 0:
+                    exit_code = job.status.exit_code
+                    print(f"  :x: Task '{task.name}' failed with exit code {exit_code}")
+                elif job.status.HasField("failed"):
+                    exit_code = 1
+                    print(f"  :x: Task '{task.name}' failed")
+                    if job.status.HasField("message") and job.status.message:
+                        print(job.status.message)
+                else:
+                    print(f"  :white_check_mark: Task '{task.name}' succeeded")
+            print(f"❯ {beaker.workload.url(workload)}")
 
-            # Check if all tasks have been completed.
-            if all(task_finalized.values()):
-                break
-            else:
-                time.sleep(poll_interval)
-        else:
-            print("[red]Timeout exceeded![/]")
-            raise TimeoutError()
+        except (KeyboardInterrupt, TermInterrupt, TimeoutError):
+            print("[yellow]Canceling jobs...[/]")
+            beaker.workload.cancel(workload)
+            return 1
 
-        # Get logs and exit codes.
-        for task in tasks:
-            job = beaker.workload.get_latest_job(workload, task=task)
-            assert job is not None
-            print()
-            console.rule(f"Logs from task [i]'{task.name}'[/] :point_down:")
-            for job_log in beaker.job.logs(job, follow=True):
-                console.print(job_log.message.decode(), highlight=False, markup=False)
-            print()
-            console.rule(f"End of logs from task [i]'{task.name}'[/]")
-
-        print("- Summary:")
-        exit_code = 0
-        for task in tasks:
-            job = beaker.workload.get_latest_job(workload, task=task)
-            assert job is not None
-            if job.status.HasField("exit_code") and job.status.exit_code > 0:
-                exit_code = job.status.exit_code
-                print(f"  :x: Task '{task.name}' failed with exit code {exit_code}")
-            elif job.status.HasField("failed"):
-                exit_code = 1
-                print(f"  :x: Task '{task.name}' failed")
-                if job.status.HasField("message") and job.status.message:
-                    print(job.status.message)
-            else:
-                print(f"  :white_check_mark: Task '{task.name}' succeeded")
-
-    except (KeyboardInterrupt, TermInterrupt, TimeoutError):
-        print("[yellow]Canceling jobs...[/]")
-        beaker.workload.cancel(workload)
-        return 1
-
-    return exit_code
+        return exit_code
 
 
 if __name__ == "__main__":

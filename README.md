@@ -41,7 +41,7 @@ Time to wait (in seconds) between polling for status changes of the experiment's
 ## Example
 
 ```yaml
-uses: allenai/beaker-run@v1
+uses: allenai/beaker-run@v2
 with:
   spec: |  # <-- !! This bar "|" is important !!
     version: "v2"
@@ -51,9 +51,7 @@ with:
         image:
           docker: "hello-world"
         context:
-          cluster: "ai2/petew-cpu"
-        result:
-          path: "/unused"
+          preemptible: true
   token: ${{ secrets.BEAKER_TOKEN }}
   workspace: ai2/petew-testing
 ```

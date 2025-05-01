@@ -25,16 +25,6 @@ The Beaker workspace to use.
 
 A name to assign the experiment. If not specified, a random name will be generated.
 
-### `clusters` (optional)
-
-A comma-separated list of clusters that can be used to override the cluster
-in the spec for a task, if any of them have enough resources avaiable.
-
-For example, you may want to set the cluster in your spec to a scalable cloud cluster,
-and then set the `clusters` input to a list of on-premise clusters.
-That way if any of those on-premise clusters have enough resources available,
-they will be used instead of the cloud cluster specified in the experiment spec.
-
 ### `timeout` (optional)
 
 Time to wait (in seconds) for the experiment to finish.
@@ -66,5 +56,4 @@ with:
           path: "/unused"
   token: ${{ secrets.BEAKER_TOKEN }}
   workspace: ai2/petew-testing
-  clusters: ai2/general-cirrascale,ai2/allennlp-cirrascale
 ```

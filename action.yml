@@ -16,11 +16,6 @@ inputs:
     description: |
       A name to assign the experiment. If not specified, a random name will be generated.
     default: ''
-  clusters:
-    description: |
-      A comma-separated list of clusters that can be used to override the cluster
-      in the spec for a task if any of them have enough resources avaiable.
-    default: ''
   timeout:
     description: |
       Time to wait (in seconds) for the experiment to finish.
@@ -38,7 +33,6 @@ runs:
     - --token=${{ inputs.token }}
     - --workspace=${{ inputs.workspace }}
     - --name=${{ inputs.name }}
-    - --clusters=${{ inputs.clusters }}
     - --timeout=${{ inputs.timeout }}
     - --poll-interval=${{ inputs.poll_interval }}
 branding:

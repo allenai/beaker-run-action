@@ -5,13 +5,13 @@
         {
             "name": "hello",
             "image": {"docker": "hello-world"},
-            "context": {"cluster": "ai2/petew-cpu"},
+            "context": {"preemptible": true},
             "result": {"path": "/unused"}
         },
         {
             "name": "world",
             "image": {"docker": "hello-world"},
-            "context": {"cluster": "ai2/petew-cpu"},
+            "context": {"preemptible": "true"},
             "result": {"path": "/unused"}
         }
     ]

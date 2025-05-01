@@ -7,11 +7,11 @@ tasks:
     result:
       path: /unused
     context:
-      cluster: ai2/petew-cpu
+      preemptible: true
   - name: world
     image:
       docker: hello-world
     result:
       path: /unused
     context:
-      cluster: ai2/petew-cpu
+      preemptible: true
